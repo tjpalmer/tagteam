@@ -2,7 +2,7 @@ declare function require(name: string): unknown;
 
 import './render';
 import {Images, loadImages} from './assets';
-import {Box, Dude, Swing} from './dudes';
+import {Box, Dude, Flag, Swing} from './dudes';
 import {Bodies, Body, Engine, Render, World, Events} from 'matter-js';
 import {V} from './render';
 
@@ -36,7 +36,11 @@ export class Game {
 
   avatar!: Body;
 
+  box!: Body;
+
   engine = Engine.create();
+
+  flag!: Body;
 
   private handleKey(event: KeyboardEvent, active: boolean) {
     switch (event.code) {
@@ -63,16 +67,37 @@ export class Game {
   images: Images;
 
   private initCollision() {
+    let {box, flag} = this;
     Events.on(this.engine, 'collisionStart', (event) => {
+      let {avatar} = this;
       for (let pair of event.pairs) {
         let other: Body | undefined = undefined;
-        if (pair.bodyA == this.avatar) {
+        if (pair.bodyA == avatar) {
           other = pair.bodyB;
-        } else if (pair.bodyB == this.avatar) {
+        } else if (pair.bodyB == avatar) {
           other = pair.bodyA;
         }
-        if (other && (other as any).dude) {
+        if (other && ((other as any).dude) {
           this.avatar = other;
+          break;
+        }
+      }
+    });
+    // Use collisionActive in case the box is already there before becoming the
+    // avatar.
+    Events.on(this.engine, 'collisionActive', (event) => {
+      if (this.avatar != box) {
+        return;
+      }
+      for (let pair of event.pairs) {
+        let other: Body | undefined = undefined;
+        if (pair.bodyA == box) {
+          other = pair.bodyB;
+        } else if (pair.bodyB == box) {
+          other = pair.bodyA;
+        }
+        if (other == flag) {
+          console.log('Win!');
           break;
         }
       }
@@ -88,7 +113,7 @@ export class Game {
       Bodies.rectangle(360, 715, 720, 10, {isStatic: true}),
     ];
     let dudes = [
-      new Box({
+      this.box = new Box({
         direction: V.create(-1, 1),
         game: this,
         position: V.create(672, 48),
@@ -104,9 +129,10 @@ export class Game {
         position: V.create(48, 48),
       }).body,
     ];
-    this.avatar = dudes[0];
+    this.avatar = this.box;
+    this.flag = new Flag({game: this, position: V.create(672, 672)}).body;
     this.initCollision();
-    World.add(engine.world, dudes.concat(walls));
+    World.add(engine.world, [this.flag].concat(dudes).concat(walls));
     engine.world.gravity.scale = 0;
     Engine.run(engine);
     let render = Render.create({

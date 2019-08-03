@@ -81,6 +81,7 @@ let spriteSize = V.create();
 // Copied and modified from Matter.js render bodies function.
 (Render as any).bodies = function(render: Render, bodies: Body[], context: CanvasRenderingContext2D) {
   let c = context;
+  context.imageSmoothingEnabled = false;
   let {options} = render;
   let showInternalEdges =
     (options as any).showInternalEdges || !options.wireframes;

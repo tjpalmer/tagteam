@@ -10,16 +10,32 @@ export interface Dude {
 }
 
 export interface DudeInfo {
-  direction: Vector;
+  direction?: Vector;
   game: Game;
   position: Vector;
+}
+
+export class Flag {
+
+  constructor(info: DudeInfo) {
+    let {game, position} = info;
+    this.body = Bodies.rectangle(
+      position.x, position.y, 48, 48, {
+        render: makeRender(game.images.flag, {gridSize: V.create(1, 1)}),
+        isSensor: true,
+        isStatic: true,
+      },
+    );
+  }
+
+  body: Body;
+
 }
 
 export class Box {
 
   constructor(info: DudeInfo) {
     let {direction, game, position} = info;
-    V.normalize(direction, this.direction);
     this.game = game;
     let body = this.body = Bodies.rectangle(
       position.x, position.y, 48, 48, {
@@ -31,14 +47,12 @@ export class Box {
     );
     (body as any).dude = this;
     Body.setVelocity(
-      this.body, V.mul(this.direction, this.speed * this.stopFactor),
+      this.body, V.mul(V.normalize(direction!), this.speed * this.stopFactor),
     );
     Events.on(game.engine, 'beforeUpdate', () => this.update());
   }
 
   body: Body;
-
-  direction = V.create();
 
   game: Game;
 
@@ -49,8 +63,7 @@ export class Box {
   update() {
     let {body, game, speed, stopFactor} = this;
     spriteOf(this).gridIndex.y = game.avatar == this.body ? 1 : 0;
-    V.copy(this.direction, v1);
-    V.mul(this.direction, V.dot(this.direction, body.velocity), v1);
+    V.copy(body.velocity, v1);
     if (!game.active(this)) {
       speed *= stopFactor;
     }
@@ -74,7 +87,7 @@ export class Swing {
       restitution: 1,
     });
     (body as any).dude = this;
-    Body.setVelocity(this.body, V.mul(V.normalize(direction), this.speed));
+    Body.setVelocity(this.body, V.mul(V.normalize(direction!), this.speed));
     Events.on(game.engine, 'beforeUpdate', () => this.update());
   }
 
@@ -103,11 +116,15 @@ export class Swing {
 let v1 = V.create();
 let v2 = V.create();
 
-function makeRender(texture: HTMLImageElement) {
+interface RenderOptions {
+  gridSize?: Vector;
+}
+
+function makeRender(texture: HTMLImageElement, options: RenderOptions = {}) {
   return {
     sprite: {
       gridIndex: {x: 0, y: 0},
-      gridSize: {x: 1, y: 2},
+      gridSize: options.gridSize || {x: 1, y: 2},
       texture,
       xScale: 3,
       yScale: 3,

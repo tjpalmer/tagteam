@@ -9,6 +9,7 @@ export async function loadImages() {
 let assetLoaders = requestImages({
   ball: require('./assets/blueball.png'),
   box: require('./assets/redbox.png'),
+  flag: require('./assets/flag.png'),
 });
 
 type ImagePromise = Promise<HTMLImageElement>;
