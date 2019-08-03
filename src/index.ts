@@ -1,7 +1,11 @@
 declare function require(name: string): unknown;
 
+import './render';
+import {Sprite, V} from './render';
 import {Images, loadImages} from './assets';
-import {Bodies, Body, Engine, Events, Render, Vector, World} from 'matter-js';
+import {
+  Bodies, Body, Engine, Events, IBodyRenderOptionsSprite, Render, Vector, World,
+} from 'matter-js';
 
 addEventListener('load', main);
 
@@ -56,7 +60,19 @@ class Game {
 
   initWorld() {
     let engine = Engine.create();
-    let ball = Bodies.circle(360, 48, 24, {frictionAir: 0, restitution: 1});
+    let ball = Bodies.circle(360, 48, 24, {
+      frictionAir: 0,
+      render: {
+        sprite: {
+          gridIndex: {x: 0, y: 1},
+          gridSize: {x: 1, y: 2},
+          texture: this.images.ball,
+          xScale: 3,
+          yScale: 3,
+        } as Sprite as any as IBodyRenderOptionsSprite,
+      },
+      restitution: 1,
+    });
     Body.setVelocity(ball, {x: 0, y: 5});
     let walls = [
       Bodies.rectangle(360, 5, 720, 10, {isStatic: true}),
@@ -66,21 +82,24 @@ class Game {
     ];
     World.add(engine.world, [ball].concat(walls));
     engine.world.gravity.scale = 0;
+    let vel1 = Vector.create();
+    let vel2 = Vector.create();
     Events.on(engine, 'beforeUpdate', () => {
       let speed = 5;
-      let velocity = ball.velocity;
+      V.copy(ball.velocity, vel1);
       if (this.active) {
-        velocity =
-          Vector.add(velocity, Vector.mult(Vector.perp(velocity), 0.05));
+        V.perp(vel1, vel2);
+        V.vadd(vel1, V.mul(vel2, 0.05, vel2), vel1);
       }
-      velocity = Vector.mult(Vector.normalise(velocity), speed);
-      Body.setVelocity(ball, velocity);
+      V.mul(V.normalize(vel1, vel1), speed, vel1);
+      Body.setAngle(ball, 0);
+      Body.setVelocity(ball, vel1);
     });
     Engine.run(engine);
     let render = Render.create({
       canvas: document.getElementsByTagName('canvas')[0],
       engine,
-      options: {height: 720, width: 720},
+      options: {height: 720, width: 720, wireframes: false},
     });
     Render.run(render);
   }
