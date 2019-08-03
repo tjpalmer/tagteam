@@ -12,10 +12,11 @@ export interface Sprite {
 
 export const V = {
   copy: vcopy,
+  create: Vector.create,
 
   mul(a: Vector, b: number, output?: Vector) {
     if (!output) {
-      output = {x: 0, y: 0};
+      output = V.create();
     }
     output.x = a.x * b;
     output.y = a.y * b;
@@ -28,7 +29,7 @@ export const V = {
 
   perp(a: Vector, output?: Vector) {
     if (!output) {
-      output = {x: 0, y: 0};
+      output = V.create();
     }
     output.x = -a.y;
     output.y = a.x;
@@ -49,7 +50,7 @@ function vcopy(a: Vector, output: Vector) {
 
 function vdiv(a: Vector, b: Vector, output?: Vector) {
   if (!output) {
-    output = {x: 0, y: 0};
+    output = V.create();
   }
   output.x = a.x / b.x;
   output.y = a.y / b.y;
@@ -58,7 +59,7 @@ function vdiv(a: Vector, b: Vector, output?: Vector) {
 
 function vmul(a: Vector, b: Vector, output?: Vector) {
   if (!output) {
-    output = {x: 0, y: 0};
+    output = V.create();
   }
   output.x = a.x * b.x;
   output.y = a.y * b.y;
@@ -71,8 +72,8 @@ function vput(x: number, y: number, output: Vector) {
   return output;
 }
 
-let spriteOffset = Vector.create();
-let spriteSize = Vector.create();
+let spriteOffset = V.create();
+let spriteSize = V.create();
 
 // Copied and modified from Matter.js render bodies function.
 (Render as any).bodies = function(render: Render, bodies: Body[], context: CanvasRenderingContext2D) {
