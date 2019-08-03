@@ -54,6 +54,7 @@ export class Swing {
     }
     V.mul(V.normalize(v1, v1), speed, v1);
     Body.setAngle(body, 0);
+    Body.setAngularVelocity(body, 0);
     Body.setVelocity(body, v1);
   }
 
