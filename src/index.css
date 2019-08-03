@@ -1,0 +1,17 @@
+#background {
+  background: rgb(99, 171, 199);
+  display: inline-block;
+}
+
+body {
+  background: black;
+  text-align: center;
+}
+
+canvas {
+  display: inline-block;
+  height: 95vmin;
+  image-rendering: crisp-edges;
+  image-rendering: pixelated;
+  width: 95vmin;
+}
