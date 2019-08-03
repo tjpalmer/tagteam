@@ -24,8 +24,10 @@ export const V = {
     return output;
   },
 
+  norm: Vector.magnitude,
+
   normalize(a: Vector, output?: Vector) {
-    return V.mul(a, 1 / Vector.magnitude(a), output);
+    return V.mul(a, 1 / V.norm(a), output);
   },
 
   perp(a: Vector, output?: Vector) {
