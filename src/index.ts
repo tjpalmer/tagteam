@@ -2,7 +2,7 @@ declare function require(name: string): unknown;
 
 import './render';
 import {Images, loadImages} from './assets';
-import {Dude, Swing} from './dudes';
+import {Box, Dude, Swing} from './dudes';
 import {Bodies, Body, Engine, Render, World, Events} from 'matter-js';
 import {V} from './render';
 
@@ -66,6 +66,11 @@ export class Game {
       Bodies.rectangle(360, 715, 720, 10, {isStatic: true}),
     ];
     let dudes = [
+      new Box({
+        direction: V.create(-1, 1),
+        game: this,
+        position: V.create(672, 48),
+      }).body,
       new Swing({
         direction: V.create(0, -1),
         game: this,

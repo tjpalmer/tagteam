@@ -13,6 +13,7 @@ export interface Sprite {
 export const V = {
   copy: vcopy,
   create: Vector.create,
+  dot: Vector.dot as (a: Vector, b: Vector) => number,
 
   mul(a: Vector, b: number, output?: Vector) {
     if (!output) {

@@ -15,22 +15,62 @@ export interface DudeInfo {
   position: Vector;
 }
 
+export class Box {
+
+  constructor(info: DudeInfo) {
+    let {direction, game, position} = info;
+    V.normalize(direction, this.direction);
+    this.game = game;
+    let body = this.body = Bodies.rectangle(
+      position.x, position.y, 48, 48, {
+        friction: 1,
+        frictionAir: 0,
+        render: makeRender(game.images.box),
+        restitution: 1,
+      },
+    );
+    (body as any).dude = this;
+    Body.setVelocity(
+      this.body, V.mul(this.direction, this.speed * this.stopFactor),
+    );
+    Events.on(game.engine, 'beforeUpdate', () => this.update());
+  }
+
+  body: Body;
+
+  direction = V.create();
+
+  game: Game;
+
+  speed = 5;
+
+  stopFactor = 0.01;
+
+  update() {
+    let {body, game, speed, stopFactor} = this;
+    spriteOf(this).gridIndex.y = game.avatar == this.body ? 1 : 0;
+    V.copy(this.direction, v1);
+    V.mul(this.direction, V.dot(this.direction, body.velocity), v1);
+    if (!game.active(this)) {
+      speed *= stopFactor;
+    }
+    V.mul(V.normalize(v1, v1), speed, v1);
+    Body.setAngle(body, 0);
+    Body.setAngularVelocity(body, 0);
+    Body.setVelocity(body, v1);
+  }
+
+}
+
 export class Swing {
 
   constructor(info: DudeInfo) {
     let {direction, game, position} = info;
     this.game = game;
     let body = this.body = Bodies.circle(position.x, position.y, 24, {
+      friction: 0,
       frictionAir: 0,
-      render: {
-        sprite: {
-          gridIndex: {x: 0, y: 1},
-          gridSize: {x: 1, y: 2},
-          texture: game.images.ball,
-          xScale: 3,
-          yScale: 3,
-        } as Sprite as any as IBodyRenderOptionsSprite,
-      },
+      render: makeRender(game.images.ball),
       restitution: 1,
     });
     (body as any).dude = this;
@@ -62,6 +102,18 @@ export class Swing {
 
 let v1 = V.create();
 let v2 = V.create();
+
+function makeRender(texture: HTMLImageElement) {
+  return {
+    sprite: {
+      gridIndex: {x: 0, y: 0},
+      gridSize: {x: 1, y: 2},
+      texture,
+      xScale: 3,
+      yScale: 3,
+    } as Sprite as any as IBodyRenderOptionsSprite,
+  };
+}
 
 function spriteOf(dude: Dude) {
   return dude.body.render.sprite as any as Sprite;
