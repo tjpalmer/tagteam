@@ -9,10 +9,13 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@types/matter-js": "^0.10.2",
     "parcel-bundler": "^1.12.3",
     "typescript": "^3.5.3"
   },
-  "dependencies": {},
+  "dependencies": {
+    "matter-js": "^0.14.2"
+  },
   "browserslist": [
     "> 5%"
   ]
