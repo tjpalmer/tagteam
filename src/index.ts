@@ -18,10 +18,10 @@ export class Game {
   constructor(images: Images) {
     this.images = images;
     this.initWorld();
-    addEventListener('mousedown', () => this.activate(true));
-    addEventListener('mouseup', () => this.activate(false));
-    addEventListener('keydown', () => this.activate(true));
-    addEventListener('keyup', () => this.activate(false));
+    addEventListener('keydown', (event) => this.handleKey(event, true));
+    addEventListener('keyup', (event) => this.handleKey(event, false));
+    addEventListener('mousedown', (event) => this.handleMouse(event, true));
+    addEventListener('mouseup', (event) => this.handleMouse(event, false));
   }
 
   private activate(active: boolean) {
@@ -37,6 +37,28 @@ export class Game {
   avatar!: Body;
 
   engine = Engine.create();
+
+  private handleKey(event: KeyboardEvent, active: boolean) {
+    switch (event.code) {
+      case "AltLeft":
+      case "AltRight":
+      case "ContextMenu":
+      case "MetaLeft":
+      case "MetaRight":
+      case "OSLeft":
+      case "OSRight": {
+        return;
+      }
+    }
+    this.activate(active);
+  }
+
+  private handleMouse(event: MouseEvent, active: boolean) {
+    if (event.button != 0) {
+      return;
+    }
+    this.activate(active);
+  }
 
   images: Images;
 
