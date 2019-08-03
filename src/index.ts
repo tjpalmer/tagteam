@@ -1,7 +1,7 @@
 declare function require(name: string): unknown;
 
 import {Images, loadImages} from './assets';
-import {Bodies, Engine, Render, World} from 'matter-js';
+import {Bodies, Body, Engine, Events, Render, Vector, World} from 'matter-js';
 
 addEventListener('load', main);
 
@@ -38,10 +38,26 @@ function paint(images: Images, dt: number = 0) {
 class Game {
 
   constructor(images: Images) {
-    let {engine} = this;
     this.images = images;
-    let ball = Bodies.circle(48, 48, 24, {frictionAir: 0, restitution: 1});
-    ball.force.y = 0.02;
+    this.initWorld();
+    addEventListener('mousedown', () => this.act(true));
+    addEventListener('mouseup', () => this.act(false));
+    addEventListener('keydown', () => this.act(true));
+    addEventListener('keyup', () => this.act(false));
+  }
+
+  act(active: boolean) {
+    this.active = active;
+  }
+
+  active = false;
+
+  images: Images;
+
+  initWorld() {
+    let engine = Engine.create();
+    let ball = Bodies.circle(360, 48, 24, {frictionAir: 0, restitution: 1});
+    Body.setVelocity(ball, {x: 0, y: 5});
     let walls = [
       Bodies.rectangle(360, 5, 720, 10, {isStatic: true}),
       Bodies.rectangle(5, 360, 10, 720, {isStatic: true}),
@@ -50,6 +66,16 @@ class Game {
     ];
     World.add(engine.world, [ball].concat(walls));
     engine.world.gravity.scale = 0;
+    Events.on(engine, 'beforeUpdate', () => {
+      let speed = 5;
+      let velocity = ball.velocity;
+      if (this.active) {
+        velocity =
+          Vector.add(velocity, Vector.mult(Vector.perp(velocity), 0.05));
+      }
+      velocity = Vector.mult(Vector.normalise(velocity), speed);
+      Body.setVelocity(ball, velocity);
+    });
     Engine.run(engine);
     let render = Render.create({
       canvas: document.getElementsByTagName('canvas')[0],
@@ -58,9 +84,5 @@ class Game {
     });
     Render.run(render);
   }
-
-  engine = Engine.create();
-
-  images: Images;
 
 }
