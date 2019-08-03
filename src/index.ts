@@ -1,21 +1,14 @@
-declare function require(name: string): unknown;
+import {Images, loadImages} from './assets';
 
 addEventListener('load', main);
 
-function loadImage(path: string): Promise<HTMLImageElement> {
-  return new Promise(resolve => {
-    let image = new Image;
-    image.onload = () => resolve(image);
-    image.src = path;
-  });
-}
-
-let ball = loadImage(require('./assets/blueball.png') as string);
-
 async function main() {
-  console.log(await ball);
+  let images = await loadImages();
+  paint(images);
 }
 
-function paint() {
-  //
+function paint(images: Images) {
+  let canvas = document.getElementsByTagName('canvas')[0];
+  let context = canvas.getContext('2d')!;
+  context.drawImage(images.ball, 0, 0);
 }
