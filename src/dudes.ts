@@ -39,7 +39,7 @@ export class Box {
     this.game = game;
     let body = this.body = Bodies.rectangle(
       position.x, position.y, 48, 48, {
-        friction: 1,
+        friction: 0,
         frictionAir: 0,
         render: makeRender(game.images.box),
         restitution: 1,

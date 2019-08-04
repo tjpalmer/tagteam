@@ -3,7 +3,9 @@ declare function require(name: string): unknown;
 import './render';
 import {Images, loadImages} from './assets';
 import {Box, Dude, Flag, Swing} from './dudes';
-import {Bodies, Body, Engine, Render, World, Events} from 'matter-js';
+import {
+  Bodies, Body, Composite, Engine, Render, World, Events, Vector,
+} from 'matter-js';
 import {V} from './render';
 
 addEventListener('load', main);
@@ -22,6 +24,8 @@ export class Game {
     addEventListener('keyup', (event) => this.handleKey(event, false));
     addEventListener('mousedown', (event) => this.handleMouse(event, true));
     addEventListener('mouseup', (event) => this.handleMouse(event, false));
+    addEventListener('touchstart', (event) => this.activate(true));
+    addEventListener('touchend', (event) => this.activate(false));
   }
 
   private activate(active: boolean) {
@@ -67,7 +71,6 @@ export class Game {
   images: Images;
 
   private initCollision() {
-    let {box, flag} = this;
     Events.on(this.engine, 'collisionStart', (event) => {
       let {avatar} = this;
       for (let pair of event.pairs) {
@@ -77,7 +80,7 @@ export class Game {
         } else if (pair.bodyB == avatar) {
           other = pair.bodyA;
         }
-        if (other && ((other as any).dude) {
+        if (other && (other as any).dude) {
           this.avatar = other;
           break;
         }
@@ -86,7 +89,8 @@ export class Game {
     // Use collisionActive in case the box is already there before becoming the
     // avatar.
     Events.on(this.engine, 'collisionActive', (event) => {
-      if (this.avatar != box) {
+      let {avatar, box, flag} = this;
+      if (avatar != box) {
         return;
       }
       for (let pair of event.pairs) {
@@ -97,11 +101,55 @@ export class Game {
           other = pair.bodyA;
         }
         if (other == flag) {
-          console.log('Win!');
+          this.win();
           break;
         }
       }
     });
+  }
+
+  private initLevel() {
+    let {engine, level} = this;
+    // First remove the old ones.
+    for (let sprite of this.sprites) {
+      Composite.remove(engine.world, sprite);
+    }
+    // Choose placements.
+    let blockSize = 48;
+    let size = 720 / blockSize - 2;
+    let origin = V.create(blockSize, blockSize);
+    let count = size * size;
+    // Permute on grid indices to avoid starting with intersections.
+    let indices = permutation(count, level + 2);
+    if (level == 0) {
+      indices = [(size - 1) * size + 6, 6 * size + 6];
+    }
+    let direction = V.create(0, 1);
+    let makeInfo = (index: number, direction?: Vector) => {
+      let row = Math.floor(index / size);
+      let col = index % size;
+      direction = direction ||
+        V.normalize(V.create(Math.random() - 0.5, Math.random() - 0.5));
+      if (level == 0) {
+        direction = V.create(0, -1);
+      }
+      return {
+        direction,
+        game: this,
+        position: V.vadd(V.mul(V.create(col, row), blockSize), origin),
+      };
+    }
+    // Flag then other dudes.
+    // Flag doesn't need direction, but eh.
+    this.flag = new Flag(makeInfo(indices[0])).body;
+    let dudes = indices.slice(1, -1).map((index) => {
+      return new Swing(makeInfo(index)).body;
+    });
+    // Make box orthogonal to at least one swing, so things should be doable.
+    this.box = new Box(makeInfo(indices.slice(-1)[0], V.perp(direction))).body;
+    this.avatar = this.box;
+    this.sprites = [this.flag, this.box].concat(dudes);
+    World.add(engine.world, this.sprites);
   }
 
   private initWorld() {
@@ -112,27 +160,10 @@ export class Game {
       Bodies.rectangle(715, 360, 10, 720, {isStatic: true}),
       Bodies.rectangle(360, 715, 720, 10, {isStatic: true}),
     ];
-    let dudes = [
-      this.box = new Box({
-        direction: V.create(-1, 1),
-        game: this,
-        position: V.create(672, 48),
-      }).body,
-      new Swing({
-        direction: V.create(0, -1),
-        game: this,
-        position: V.create(360, 48),
-      }).body,
-      new Swing({
-        direction: V.create(1, 1),
-        game: this,
-        position: V.create(48, 48),
-      }).body,
-    ];
-    this.avatar = this.box;
+    World.add(engine.world, walls);
     this.flag = new Flag({game: this, position: V.create(672, 672)}).body;
     this.initCollision();
-    World.add(engine.world, [this.flag].concat(dudes).concat(walls));
+    this.initLevel();
     engine.world.gravity.scale = 0;
     Engine.run(engine);
     let render = Render.create({
@@ -143,4 +174,32 @@ export class Game {
     Render.run(render);
   }
 
+  level = 0;
+
+  sprites: Body[] = [];
+
+  win() {
+    this.level += 1;
+    this.initLevel();
+  }
+
+}
+
+function permutation(total: number, keep: number): number[] {
+  let indices = [...Array(total).keys()];
+  return shuffled(indices).slice(0, keep);
+}
+
+function shuffled<Item>(items: Item[]): Item[] {
+  let count = items.length;
+  let nextInt = () => Math.floor(count * Math.random());
+  let result = items.slice();
+  // For non-full samples, Vitter's Method D might be good.
+  for (let i = result.length - 1; i > 0; i -= 1) {
+    let j = nextInt();
+    let temp = result[i];
+    result[i] = result[j];
+    result[j] = temp;
+  }
+  return result;
 }
