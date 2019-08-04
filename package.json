@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "description": "",
   "scripts": {
-    "build": "rm -f main.*.css* src.*.js* && parcel build src/index.html --no-source-maps --out-dir . --public-url ./",
+    "build": "rm -f src.*.css* src.*.js* src.*.png* && parcel build src/index.html --no-source-maps --out-dir . --public-url ./",
     "start": "parcel src/index.html --out-dir dev"
   },
   "author": "",
